@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Coding Form</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f9f9f9; }
+        h1 { text-align: center; margin-top: 20px; }
+        #container { display: flex; justify-content: space-between; padding: 20px; }
+        #video-container { flex: 1; padding: 20px; }
+        #coding-form { flex: 1; padding: 20px; background-color: #f0f0f0; border-radius: 10px; }
+        .nav-buttons { text-align: center; margin: 20px 0; }
+        .nav-buttons button { font-size: 16px; padding: 10px 15px; margin: 5px; }
+        .form-section { margin-top: 20px; }
+        .form-section h3 { margin-bottom: 5px; }
+        .form-section label { display: block; margin: 10px 0 5px; }
+        .form-section select, .form-section textarea { width: 100%; padding: 10px; margin-bottom: 15px; }
+        .submit-button { text-align: center; margin-top: 20px; }
+        .select2-container { width: 100% !important; }
+    </style>
+</head>
+<body>
+
+<h1>Video Coding Form</h1>
+
+<div id="container">
+    <div id="video-container">
+        <h2 id="video-title">Video Title</h2>
+        <p id="video-text">Video Description</p>
+        <iframe id="video-frame" width="600" height="400" allowfullscreen="" style="border: 1px solid #ccc;"></iframe>
+
+        <div class="nav-buttons">
+            <button id="first-btn">⏮ First Video</button>
+            <button id="prev-btn">⬅ Previous</button>
+            <button id="next-btn">Next ➡</button>
+            <button id="last-btn">⏭ Last Video</button>
+        </div>
+
+        <div>
+            <label for="video-select">Jump to Video:</label>
+            <select id="video-select" class="searchable-dropdown">
+                <option value="" selected disabled>Choose a video</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-section" id="coding-form">
+        <h3>Coding Information for this Video</h3>
+        
+        <!-- User Selection Dropdown -->
+        <label for="coder-select">Select Coder/User:</label>
+        <select id="coder-select" class="searchable-dropdown">
+            <option value="Coder 1">Coder 1</option>
+            <option value="Coder 2">Coder 2</option>
+            <option value="Coder 3">Coder 3</option>
+        </select>
+
+        <label for="user-type">User Type:</label>
+        <select id="user-type" class="searchable-dropdown" multiple="multiple">
+            <option value="Individual">Individual</option>
+            <option value="Consumer">Consumer</option>
+            <option value="Health Professional">Health Professional</option>
+            <option value="Organisation">Organisation</option>
+            <option value="Advocate">Advocate</option>
+        </select>
+
+        <label for="content">Content:</label>
+        <select id="content" class="searchable-dropdown" multiple="multiple">
+            <option value="Personal Experience of Mental Illness">Personal Experience of Mental Illness</option>
+            <option value="Awareness Promotion">Awareness Promotion</option>
+            <option value="Research Findings">Research Findings</option>
+            <option value="Resources for Consumers">Resources for Consumers</option>
+            <option value="Advertisement">Advertisement</option>
+            <option value="News Media">News Media</option>
+            <option value="Personal Opinion/Dyadic Interaction">Personal Opinion/Dyadic Interaction</option>
+        </select>
+
+        <label for="attitude">Attitude:</label>
+        <select id="attitude" class="searchable-dropdown" multiple="multiple">
+            <option value="Stigmatizing">Stigmatizing</option>
+            <option value="Personal Experience of Stigma">Personal Experience of Stigma</option>
+            <option value="Supportive">Supportive</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Anti-stigma">Anti-stigma</option>
+        </select>
+
+        <label for="stigma-type">Stigma Types:</label>
+        <select id="stigma-type" class="searchable-dropdown" multiple="multiple"></select>
+
+        <label for="other-comments">Other/Comments:</label>
+        <textarea id="other-comments" rows="4" placeholder="Any other relevant comments..."></textarea>
+
+        <div class="submit-button">
+            <button id="submit-btn">Submit Coding for This Video</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let videoData = [];
+        let currentIndex = 0;
+
+        // Fetch and parse the JSON file
+        fetch('combined_tiktok_data.json')
+            .then(response => response.json())
+            .then(data => {
+                videoData = data;
+                populateVideoDropdown();
+                displayVideo(currentIndex);
+            })
+            .catch(error => {
+                document.getElementById('video-title').innerText = "Error Loading Video Data";
+                document.getElementById('video-text').innerText = error.message;
+            });
+
+                    // Button event listeners
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentIndex < videoData.length - 1) {
+                    currentIndex++;  // Increment the index
+                    displayVideo(currentIndex);  // Display the next video
+                }
+            });
+
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;  // Decrement the index
+                    displayVideo(currentIndex);  // Display the previous video
+                }
+            });
+
+            document.getElementById('first-btn').addEventListener('click', () => {
+                currentIndex = 0;  // Set index to the first video
+                displayVideo(currentIndex);  // Display the first video
+            });
+
+            document.getElementById('last-btn').addEventListener('click', () => {
+                currentIndex = videoData.length - 1;  // Set index to the last video
+                displayVideo(currentIndex);  // Display the last video
+            });
+
+
+        // Function to display a video based on the current index
+        function displayVideo(index) {
+            if (videoData.length === 0 || index < 0 || index >= videoData.length) return;
+            const videoObject = videoData[index];
+            document.getElementById('video-title').innerText = `Video ID: ${videoObject.id || 'Unknown'}`;
+            document.getElementById('video-text').innerText = videoObject.text || 'No description available.';
+            document.getElementById('video-frame').src = videoObject.mediaUrls[0] || '';
+            document.getElementById('video-select').value = index.toString();
+
+            // Display data for the current coder
+            const selectedUser = document.getElementById('coder-select').value;
+            displayCodingData(selectedUser, videoObject.coding || {});
+        }
+
+        // Handle form data submission for a specific coder
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            const selectedUser = document.getElementById('coder-select').value;
+            const videoObject = videoData[currentIndex];
+
+            if (!videoObject.coding) {
+                videoObject.coding = {};
+            }
+
+            const codingData = {
+                userType: $('#user-type').val(),
+                content: $('#content').val(),
+                attitude: $('#attitude').val(),
+                stigmaType: $('#stigma-type').val(),
+                comments: document.getElementById('other-comments').value
+            };
+
+            videoObject.coding[selectedUser] = codingData;
+
+            // Send the updated JSON data to the server
+            fetch('/save-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(videoData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`Coding data for ${selectedUser} has been saved successfully for Video ID: ${videoObject.id}`);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving data:', error);
+            });
+        });
+
+        function populateVideoDropdown() {
+            const videoSelect = document.getElementById("video-select");
+            videoSelect.innerHTML = "";
+            videoData.forEach((video, index) => {
+                const option = document.createElement("option");
+                option.value = index.toString();
+                option.text = `Video ${index + 1}: ${video.text.substring(0, 30)}...`;
+                videoSelect.appendChild(option);
+            });
+            $('#video-select').select2();
+        }
+
+        function displayCodingData(user, coding) {
+            const codingData = coding[user] || {};
+
+            // Set userType values (Array of values)
+            $('#user-type').val(codingData.userType || []).trigger('change');
+
+            // Set content values (Array of values)
+            $('#content').val(codingData.content || []).trigger('change');
+
+            // Set attitude values (Array of values)
+            $('#attitude').val(codingData.attitude || []).trigger('change');
+
+            // Set stigmaType values (Array of values)
+            $('#stigma-type').val(codingData.stigmaType || []).trigger('change');
+
+            // Set comments
+            document.getElementById('other-comments').value = codingData.comments || "";
+        }
+
+
+        // Populate stigma dropdown
+        function populateStigmaDropdown() {
+            const stigmaOptions = [
+                "Schizophrenia is infectious", "Schizophrenia is personal weakness", "People with schizophrenia are dangerous",
+                "People with schizophrenia are unpredictable", "Schizophrenia is not a real illness",
+                "People with schizophrenia could ‘snap out of it’", "People with schizophrenia are self-centered",
+                "People with schizophrenia are weird/stupid", "People with schizophrenia are glorified",
+                "Fear of contamination ('schizophrenia is infectious')", "Fear of danger from those with schizophrenia",
+                "Discomfort or avoidance due to unpredictability ('unpredictable behavior')", "Anger or frustration toward 'weakness'",
+                "Stigmatized for being 'weird,' leading to avoidance", "Avoidance or exclusion due to fear of contamination",
+                "Help-withholding based on danger perception", "Mockery of 'weird' behavior", "Discriminatory actions against 'weak'",
+                "People may internalize beliefs about their condition affecting others negatively", "Individuals may believe they are inherently weak",
+                "Public belief that those with schizophrenia are dangerous", "Stereotype paints them as irrational",
+                "Some may believe their symptoms are not legitimate concerns", "Self-stigma can arise from internalizing these beliefs",
+                "Beliefs reinforce guilt or shame in individuals", "Suffering from schizophrenia may lead to social withdrawal",
+                "Pressure to 'live up' to a noble ideal of suffering", "Internalized belief in being a 'danger' to others",
+                "Self-prejudice based on lack of control", "Self-distrust due to societal standards", "Ashamed of odd behavior",
+                "Self-isolation based on fear of posing a risk", "Avoid seeking help due to internalized stigma", "Internalized belief in being unworthy",
+                "Stigma of incompetence prevents social engagement"
+            ];
+
+            const stigmaDropdown = document.getElementById("stigma-type");
+            stigmaDropdown.innerHTML = "";
+            stigmaOptions.forEach(option => {
+                const opt = document.createElement("option");
+                opt.value = option;
+                opt.innerText = option;
+                stigmaDropdown.appendChild(opt);
+            });
+
+            $('#stigma-type').select2({
+                placeholder: "Select multiple stigma types",
+                allowClear: true
+            });
+        }
+
+        $('#video-select').on('select2:select', function (e) {
+            const selectedIndex = parseInt(e.params.data.id, 10);
+            if (!isNaN(selectedIndex) && selectedIndex >= 0 && selectedIndex < videoData.length) {
+                currentIndex = selectedIndex;
+                displayVideo(currentIndex);
+            }
+        });
+
+        $('#coder-select').on('select2:select', function () {
+            displayVideo(currentIndex); // Refresh the form when the coder changes
+        });
+
+        $('.searchable-dropdown').select2({
+            placeholder: "Select multiple options",
+            allowClear: true
+        });
+        populateStigmaDropdown();
+    });
+</script>
+
+</body>
+</html>
