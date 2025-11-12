@@ -57,6 +57,9 @@
             <option value="Coder 3">Coder 3</option>
         </select>
 
+        <h3>Top 5 Comments and Ratings</h3>
+        <div id="comments-section"></div>
+
         <label for="user-type">User Type:</label>
         <select id="user-type" class="searchable-dropdown" multiple="multiple">
             <option value="Individual">Individual</option>
@@ -157,37 +160,110 @@
             // Display data for the current coder
             const selectedUser = document.getElementById('coder-select').value;
             displayCodingData(selectedUser, videoObject.coding || {});
-        }
+            console.log("Comments for video:", videoObject.comments);  // Check if comments exist
 
+            // Ensure that displayComments() is called with the correct data
+            displayComments(videoObject.comments || []);
+        }
+        function displayComments(comments) {
+            const commentsSection = document.getElementById('comments-section');
+            commentsSection.innerHTML = ""; // Clear previous comments
+
+            if (comments.length === 0) {
+                // Display fallback if no comments exist
+                commentsSection.innerHTML = "<p>No comments available for this video.</p>";
+                return;
+            }
+            // Assuming each comment is an object with a 'text' field
+            const topComments = comments.slice(0, 5); // Get top 5 comments
+            topComments.forEach((comment, i) => {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+
+                // Check if the comment object has a 'text' field
+                const commentText = comment.text || "No comment text available"; // Extract text field
+
+                const commentLabel = document.createElement('div');
+                commentLabel.className = 'comment-label';
+                commentLabel.innerHTML = `<strong>Comment ${i + 1}:</strong> <span>${commentText}</span>`;
+
+                const ratingLabel = document.createElement('label');
+                ratingLabel.textContent = 'Rate this comment (1-10):';
+
+                const ratingInput = document.createElement('input');
+                ratingInput.type = 'number';
+                ratingInput.min = '1';
+                ratingInput.max = '10';
+                ratingInput.className = 'rating-input';
+                ratingInput.dataset.commentIndex = i;  // Store the comment index for later use
+
+                commentDiv.appendChild(commentLabel);
+                commentDiv.appendChild(ratingLabel);
+                commentDiv.appendChild(ratingInput);
+
+                commentsSection.appendChild(commentDiv);
+            });
+        }
         // Handle form data submission for a specific coder
         document.getElementById('submit-btn').addEventListener('click', () => {
             const selectedUser = document.getElementById('coder-select').value;
-            const videoObject = videoData[currentIndex];
+            const currentVideo = videoData[currentIndex];  // Get current video
 
-            if (!videoObject.coding) {
-                videoObject.coding = {};
+            if (!currentVideo.coding) {
+                currentVideo.coding = {};
             }
+
+            const commentRatings = [];
+            document.querySelectorAll('.rating-input').forEach((input) => {
+                const commentIndex = input.dataset.commentIndex;
+                const rating = input.value;
+                if (rating) {
+                    commentRatings.push({ commentIndex, rating: parseInt(rating, 10) });
+                }
+            });
 
             const codingData = {
                 userType: $('#user-type').val(),
                 content: $('#content').val(),
                 attitude: $('#attitude').val(),
                 stigmaType: $('#stigma-type').val(),
-                comments: document.getElementById('other-comments').value
+                comments: document.getElementById('other-comments').value,
+                commentRatings: commentRatings
             };
 
-            videoObject.coding[selectedUser] = codingData;
+            // Create a copy of just the current video data
+            const submissionData = [{
+                id: currentVideo.id,
+                text: currentVideo.text,
+                createTime: currentVideo.createTime,
+                createTimeISO: currentVideo.createTimeISO,
+                diggCount: currentVideo.diggCount,
+                shareCount: currentVideo.shareCount,
+                playCount: currentVideo.playCount,
+                collectCount: currentVideo.collectCount,
+                commentCount: currentVideo.commentCount,
+                mentions: currentVideo.mentions,
+                hashtags: currentVideo.hashtags,
+                searchQuery: currentVideo.searchQuery,
+                mediaUrls: currentVideo.mediaUrls,
+                comments: currentVideo.comments,
+                coding: {
+                    ...currentVideo.coding,  // Keep existing coding data
+                    [selectedUser]: codingData  // Add new coding data
+                }
+            }];
 
-            // Send the updated JSON data to the server
             fetch('/save-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(videoData)
+                body: JSON.stringify(submissionData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert(`Coding data for ${selectedUser} has been saved successfully for Video ID: ${videoObject.id}`);
+                    // Update the local videoData array
+                    videoData[currentIndex].coding = submissionData[0].coding;
+                    alert(`Coding data for ${selectedUser} has been saved successfully for Video ID: ${currentVideo.id}`);
                 } else {
                     alert(`Error: ${data.message}`);
                 }
@@ -196,7 +272,6 @@
                 console.error('Error saving data:', error);
             });
         });
-
         function populateVideoDropdown() {
             const videoSelect = document.getElementById("video-select");
             videoSelect.innerHTML = "";
