@@ -10,10 +10,7 @@ This application was developed to support qualitative research on schizophrenia-
 
 Watch the demo video to see the coding interface in action:
 
-<video width="100%" controls>
-  <source src="QIMR_coding_interface.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[Click here to watch the demo video](QIMR_coding_interface.mp4)
 
 ## Key Features
 
