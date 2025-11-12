@@ -10,7 +10,7 @@ This application was developed to support qualitative research on schizophrenia-
 
 Watch the demo video to see the coding interface in action:
 
-[Click here to watch the demo video](QIMR_coding_interface.mp4)
+https://github.com/user-attachments/assets/75cfc15f-e0d8-4e9d-92d7-fc687edff5cb
 
 ## Key Features
 
